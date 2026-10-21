@@ -53,7 +53,7 @@ function MapView({
       className="
         relative
         h-full
-        min-h-[500px]
+        min-h-125
         w-full
       "
     >

@@ -1,54 +1,52 @@
-import {
-  Marker,
-  Popup,
-} from "react-leaflet";
+import { Marker, Popup } from "react-leaflet";
+import L from "leaflet";
 
-function LocationMarker({
-  location,
-}) {
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
+// Fix Leaflet marker images in Vite
+const DefaultIcon = L.icon({
+  iconUrl: markerIcon,
+  iconRetinaUrl: markerIcon2x,
+  shadowUrl: markerShadow,
+
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
+
+function LocationMarker({ location }) {
   if (!location) {
+    return null;
+  }
+
+  const lat = Number(location.lat);
+  const lon = Number(location.lon ?? location.lng);
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
     return null;
   }
 
   return (
     <Marker
-      position={[
-        location.lat,
-        location.lon,
-      ]}
+      position={[lat, lon]}
+      icon={DefaultIcon}
     >
-
       <Popup>
-
-        <div className="min-w-[200px]">
-
-          <p className="font-semibold text-slate-800">
-            📍 Selected Location
+        <div>
+          <strong>Selected Location</strong>
+          <p>
+            Latitude: {lat.toFixed(5)}
           </p>
-
-          <p className="mt-2 text-sm text-slate-600">
-            {location.displayName}
+          <p>
+            Longitude: {lon.toFixed(5)}
           </p>
-
-          <div className="mt-3 text-xs">
-
-            <p>
-              <strong>Latitude:</strong>{" "}
-              {Number(location.lat).toFixed(6)}
-            </p>
-
-            <p>
-              <strong>Longitude:</strong>{" "}
-              {Number(location.lon).toFixed(6)}
-            </p>
-
-          </div>
-
         </div>
-
       </Popup>
-
     </Marker>
   );
 }

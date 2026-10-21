@@ -2,9 +2,6 @@ const NOMINATIM_URL =
   import.meta.env.VITE_NOMINATIM_BASE_URL ||
   "https://nominatim.openstreetmap.org";
 
-const TIMEZONE_API_KEY =
-  import.meta.env.VITE_TIMEZONE_API_KEY;
-
 
 // ======================================
 // SEARCH LOCATION
@@ -62,51 +59,46 @@ export async function getAddressFromCoordinates(
   return data;
 }
 
-
 // ======================================
-// TIMEZONE
+// TIMEZONE - NO API KEY REQUIRED
 // ======================================
 
-export async function getTimezone(
-  lat,
-  lon
-) {
-
-  if (!TIMEZONE_API_KEY) {
+export async function getTimezone(lat, lon) {
+  if (
+    !Number.isFinite(Number(lat)) ||
+    !Number.isFinite(Number(lon))
+  ) {
     throw new Error(
-      "Timezone API key is missing"
+      "Invalid latitude or longitude"
     );
   }
 
   const url =
-    `https://api.timezonedb.com/v2.1/get-time-zone` +
-    `?key=${TIMEZONE_API_KEY}` +
-    `&format=json` +
-    `&by=position` +
-    `&lat=${lat}` +
-    `&lng=${lon}`;
-
+    `https://hourora.app/api/v1/lookup?` +
+    `lat=${encodeURIComponent(lat)}` +
+    `&lng=${encodeURIComponent(lon)}`;
 
   const response = await fetch(url);
 
   if (!response.ok) {
     throw new Error(
-      "Failed to find timezone"
+      `Failed to find timezone (HTTP ${response.status})`
     );
   }
 
+  const data = await response.json();
 
-  const data =
-    await response.json();
-
-
-  if (data.status !== "OK") {
+  if (!data.zone) {
     throw new Error(
-      data.message ||
-      "Timezone lookup failed"
+      data.error || "Timezone lookup failed"
     );
   }
 
-
-  return data;
+  return {
+    ...data,
+    status: "OK",
+    zoneName: data.zone,
+    formatted: data.now?.local ?? "",
+    gmtOffset: (data.now?.offsetMinutes ?? 0) * 60,
+  };
 }
